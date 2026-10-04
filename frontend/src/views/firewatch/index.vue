@@ -6,7 +6,7 @@
         <p class="page-desc">维护火险监测点，围绕监测点编号、监测区域、火险等级、风力等级做登记、筛选与状态流转。</p>
       </div>
       <div class="page-actions">
-        <button class="btn primary" type="button" @click="openCreate">登记火险监测点</button>
+        <button v-staff class="btn primary" type="button" @click="openCreate">登记火险监测点</button>
         <button class="btn" type="button" @click="exportRows">导出火险监测清单</button>
       </div>
     </header>
@@ -48,6 +48,7 @@
           <td class="row-actions">
             <button
               v-for="action in actions"
+              v-staff
               :key="action"
               class="link"
               type="button"

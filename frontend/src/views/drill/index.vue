@@ -6,7 +6,7 @@
         <p class="page-desc">维护应急演练，围绕演练编号、演练主题、参演队伍、演练日期做登记、筛选与状态流转。</p>
       </div>
       <div class="page-actions">
-        <button class="btn primary" type="button" @click="openCreate">登记应急演练</button>
+        <button v-staff class="btn primary" type="button" @click="openCreate">登记应急演练</button>
         <button class="btn" type="button" @click="exportRows">导出应急演练清单</button>
       </div>
     </header>
@@ -48,6 +48,7 @@
           <td class="row-actions">
             <button
               v-for="action in actions"
+              v-staff
               :key="action"
               class="link"
               type="button"

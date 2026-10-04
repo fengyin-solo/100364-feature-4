@@ -6,7 +6,7 @@
         <p class="page-desc">维护用火审批单，围绕审批编号、申请单位、用火类型、用火地点做登记、筛选与状态流转。</p>
       </div>
       <div class="page-actions">
-        <button class="btn primary" type="button" @click="openCreate">登记用火审批单</button>
+        <button v-staff class="btn primary" type="button" @click="openCreate">登记用火审批单</button>
         <button class="btn" type="button" @click="exportRows">导出焚烧审批清单</button>
       </div>
     </header>
@@ -48,6 +48,7 @@
           <td class="row-actions">
             <button
               v-for="action in actions"
+              v-staff
               :key="action"
               class="link"
               type="button"

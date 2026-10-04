@@ -6,7 +6,7 @@
         <p class="page-desc">维护防火物资，围绕物资编号、物资名称、物资类别、规格型号做登记、筛选与状态流转。</p>
       </div>
       <div class="page-actions">
-        <button class="btn primary" type="button" @click="openCreate">登记防火物资</button>
+        <button v-staff class="btn primary" type="button" @click="openCreate">登记防火物资</button>
         <button class="btn" type="button" @click="exportRows">导出物资储备清单</button>
       </div>
     </header>
@@ -48,6 +48,7 @@
           <td class="row-actions">
             <button
               v-for="action in actions"
+              v-staff
               :key="action"
               class="link"
               type="button"

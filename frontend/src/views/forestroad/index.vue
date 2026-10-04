@@ -6,7 +6,7 @@
         <p class="page-desc">维护林区道路，围绕道路编号、道路名称、起点位置、终点位置做登记、筛选与状态流转。</p>
       </div>
       <div class="page-actions">
-        <button class="btn primary" type="button" @click="openCreate">登记林区道路</button>
+        <button v-staff class="btn primary" type="button" @click="openCreate">登记林区道路</button>
         <button class="btn" type="button" @click="exportRows">导出林区道路清单</button>
       </div>
     </header>
@@ -48,6 +48,7 @@
           <td class="row-actions">
             <button
               v-for="action in actions"
+              v-staff
               :key="action"
               class="link"
               type="button"

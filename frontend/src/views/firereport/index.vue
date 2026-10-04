@@ -6,7 +6,7 @@
         <p class="page-desc">维护火情报告，围绕报告编号、起火地点、起火时间、火势等级做登记、筛选与状态流转。</p>
       </div>
       <div class="page-actions">
-        <button class="btn primary" type="button" @click="openCreate">登记火情报告</button>
+        <button v-staff class="btn primary" type="button" @click="openCreate">登记火情报告</button>
         <button class="btn" type="button" @click="exportRows">导出火情报告清单</button>
       </div>
     </header>
@@ -48,6 +48,7 @@
           <td class="row-actions">
             <button
               v-for="action in actions"
+              v-staff
               :key="action"
               class="link"
               type="button"

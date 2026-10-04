@@ -94,7 +94,7 @@ export const SEED_ROWS: Record<string, EntryRow[]> = {
     {
       "id": 1,
       "status": "正常值守",
-      "pending": true,
+      "pending": false,
       "abnormal": false,
       "瞭望台编号": "LOOK-0001",
       "所在山头": "瞭望台管理样例1",
@@ -122,7 +122,7 @@ export const SEED_ROWS: Record<string, EntryRow[]> = {
     {
       "id": 3,
       "status": "设备故障",
-      "pending": false,
+      "pending": true,
       "abnormal": false,
       "瞭望台编号": "LOOK-0003",
       "所在山头": "瞭望台管理样例3",
@@ -132,6 +132,22 @@ export const SEED_ROWS: Record<string, EntryRow[]> = {
       "通讯方式": "瞭望台管理样例3",
       "设备配置": "瞭望台管理样例3",
       "运行状态": "瞭望台管理样例3"
+    },
+    {
+      "id": 4,
+      "status": "维修中",
+      "pending": true,
+      "abnormal": false,
+      "瞭望台编号": "LOOK-0004",
+      "所在山头": "瞭望台管理样例4",
+      "海拔高度": "瞭望台管理样例4",
+      "视野覆盖面积": "瞭望台管理样例4",
+      "瞭望员": "瞭望台管理样例4",
+      "通讯方式": "瞭望台管理样例4",
+      "设备配置": "瞭望台管理样例4",
+      "维修人员": "设备维修组-周工",
+      "运行状态": "瞭望台管理样例4",
+      "状态轨迹": "正常值守,临时关闭,设备故障,维修中"
     }
   ],
   "firebreak": [

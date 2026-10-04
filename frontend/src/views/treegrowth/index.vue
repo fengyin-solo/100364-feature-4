@@ -6,7 +6,7 @@
         <p class="page-desc">维护林木生长记录，围绕记录编号、样地编号、林分类型、平均胸径做登记、筛选与状态流转。</p>
       </div>
       <div class="page-actions">
-        <button class="btn primary" type="button" @click="openCreate">登记林木生长记录</button>
+        <button v-staff class="btn primary" type="button" @click="openCreate">登记林木生长记录</button>
         <button class="btn" type="button" @click="exportRows">导出林木生长清单</button>
       </div>
     </header>
@@ -48,6 +48,7 @@
           <td class="row-actions">
             <button
               v-for="action in actions"
+              v-staff
               :key="action"
               class="link"
               type="button"

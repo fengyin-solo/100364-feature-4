@@ -6,7 +6,7 @@
         <p class="page-desc">维护无人机巡查任务，围绕任务编号、飞行区域、飞行路线、飞手姓名做登记、筛选与状态流转。</p>
       </div>
       <div class="page-actions">
-        <button class="btn primary" type="button" @click="openCreate">登记无人机巡查任务</button>
+        <button v-staff class="btn primary" type="button" @click="openCreate">登记无人机巡查任务</button>
         <button class="btn" type="button" @click="exportRows">导出无人机巡查清单</button>
       </div>
     </header>
@@ -48,6 +48,7 @@
           <td class="row-actions">
             <button
               v-for="action in actions"
+              v-staff
               :key="action"
               class="link"
               type="button"
