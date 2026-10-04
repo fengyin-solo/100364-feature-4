@@ -63,6 +63,51 @@
       </tbody>
     </table>
 
+    <section class="check-section">
+      <h3 class="check-title">气象观测站点现场核查待办（待核查 {{ pendingCheckCount }} 项）</h3>
+      <p class="check-desc">瞭望台维修完成后自动新增一项；核查结论在瞭望台页和本页都能提交，只接受一个结论。</p>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>核查单号</th>
+            <th>来源瞭望台</th>
+            <th>所在山头</th>
+            <th>所属林场</th>
+            <th>维修人员</th>
+            <th>生成时间</th>
+            <th>核查状态</th>
+            <th>结论提交人</th>
+            <th>结论时间</th>
+            <th>可执行动作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="item in checks" :key="String(item.id)">
+            <td>{{ item['核查单号'] }}</td>
+            <td>{{ item['来源瞭望台'] || '—' }}</td>
+            <td>{{ item['所在山头'] || '—' }}</td>
+            <td>{{ item['所属林场'] || '—' }}</td>
+            <td>{{ item['维修人员'] || '—' }}</td>
+            <td>{{ item['生成时间'] || '—' }}</td>
+            <td>{{ item.status }}</td>
+            <td>{{ item['结论提交人'] || '—' }}</td>
+            <td>{{ item['结论时间'] || '—' }}</td>
+            <td class="row-actions">
+              <template v-if="item.status === '待核查' && session.canManageFarm(item['所属林场'])">
+                <button class="link" type="button" @click="conclude(item, '核查通过')">核查通过</button>
+                <button class="link" type="button" @click="conclude(item, '核查不通过')">核查不通过</button>
+              </template>
+              <span v-else-if="item.status === '待核查'" class="view-only">仅查看（非本林场）</span>
+              <span v-else class="view-only">已办结</span>
+            </td>
+          </tr>
+          <tr v-if="!checks.length">
+            <td colspan="10" class="empty-state">暂无现场核查待办，瞭望台维修完成后会自动新增</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
     <footer class="page-foot">
       <span>共 {{ total }} 条气象观测记录</span>
       <span v-if="errorMessage" class="error-text">{{ errorMessage }}</span>
@@ -76,10 +121,13 @@ import { computed, onMounted, ref } from 'vue'
 import {
   downloadEntries,
   listEntries,
+  listWeatherChecks,
   moduleMeta,
   runAction as applyAction,
+  submitWeatherCheckConclusion,
 } from '@/api/local-service'
 import type { EntryRow } from '@/data/types'
+import { useSessionStore } from '@/stores/session'
 
 const meta = moduleMeta('weather')
 const columns = ["记录编号", "观测站点", "观测时间", "气温", "相对湿度", "风速风向", "降水量", "记录状态"]
@@ -87,7 +135,9 @@ const actions = ["提交审核", "确认数据", "标记异常"]
 const statuses = ["已录入", "已审核", "已修正", "异常值"]
 const stats = [{"label": "今日观测数", "value": 0}, {"label": "待审核记录", "value": 0}, {"label": "异常记录数", "value": 0}]
 
+const session = useSessionStore()
 const rows = ref<EntryRow[]>([])
+const checks = ref<EntryRow[]>([])
 const total = ref(0)
 const errorMessage = ref('')
 const filters = ref<Record<string, string>>({})
@@ -97,6 +147,9 @@ const statusSummary = computed(() =>
     status,
     count: rows.value.filter((row) => String(row.status) === status).length,
   })),
+)
+const pendingCheckCount = computed(
+  () => checks.value.filter((item) => item.status === '待核查').length,
 )
 
 function resetFilters() {
@@ -122,12 +175,23 @@ function runAction(action: string, row: EntryRow) {
   reload()
 }
 
+function conclude(item: EntryRow, conclusion: string) {
+  errorMessage.value = ''
+  const result = submitWeatherCheckConclusion(Number(item.id), conclusion)
+  if (!result.ok) {
+    errorMessage.value = result.message
+    return
+  }
+  reload()
+}
+
 function reload() {
   errorMessage.value = ''
   try {
     const payload = listEntries(meta.key, filters.value)
     rows.value = payload.items
     total.value = payload.total
+    checks.value = listWeatherChecks()
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : '气象观测列表读取失败'
   }

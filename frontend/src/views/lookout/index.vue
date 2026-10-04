@@ -3,7 +3,7 @@
     <header class="page-head">
       <div>
         <h2>瞭望台管理管理</h2>
-        <p class="page-desc">维护瞭望台，围绕瞭望台编号、所在山头、海拔高度、视野覆盖面积做登记、筛选与状态流转。</p>
+        <p class="page-desc">维护瞭望台，围绕瞭望台编号、所在山头、海拔高度、视野覆盖面积做登记、筛选与状态流转，运行状态按正常值守→临时关闭→设备故障→维修中单向流转，关闭后不可直接恢复值守。</p>
       </div>
       <div class="page-actions">
         <button class="btn primary" type="button" @click="openCreate">登记瞭望台</button>
@@ -43,18 +43,32 @@
       </thead>
       <tbody>
         <tr v-for="row in rows" :key="String(row.id)">
-          <td v-for="column in columns" :key="column">{{ row[column] ?? '—' }}</td>
-          <td>{{ row.status }}</td>
+          <td v-for="column in columns" :key="column">{{ row[column] || '—' }}</td>
+          <td>
+            {{ row.status }}
+            <span v-if="pendingCheckFor(row)" class="legend-item">待气象核查</span>
+          </td>
           <td class="row-actions">
-            <button
-              v-for="action in actions"
-              :key="action"
-              class="link"
-              type="button"
-              @click="runAction(action, row)"
-            >
-              {{ action }}
-            </button>
+            <span v-if="viewOnly(row)" class="view-only">仅查看（非本林场）</span>
+            <template v-else>
+              <button
+                v-for="action in actions"
+                :key="action"
+                class="link"
+                type="button"
+                @click="runAction(action, row)"
+              >
+                {{ action }}
+              </button>
+              <template v-if="pendingCheckFor(row)">
+                <button class="link" type="button" @click="concludePending(row, '核查通过')">
+                  核查通过
+                </button>
+                <button class="link" type="button" @click="concludePending(row, '核查不通过')">
+                  核查不通过
+                </button>
+              </template>
+            </template>
           </td>
         </tr>
         <tr v-if="!rows.length">
@@ -76,18 +90,23 @@ import { computed, onMounted, ref } from 'vue'
 import {
   downloadEntries,
   listEntries,
+  listWeatherChecks,
   moduleMeta,
   runAction as applyAction,
+  submitWeatherCheckConclusion,
 } from '@/api/local-service'
 import type { EntryRow } from '@/data/types'
+import { useSessionStore } from '@/stores/session'
 
 const meta = moduleMeta('lookout')
-const columns = ["瞭望台编号", "所在山头", "海拔高度", "视野覆盖面积", "瞭望员", "通讯方式", "设备配置", "运行状态"]
-const actions = ["记录值守", "登记故障", "关闭瞭望台"]
+const columns = ["瞭望台编号", "所在山头", "海拔高度", "视野覆盖面积", "瞭望员", "通讯方式", "设备配置", "运行状态", "所属林场", "维修人员"]
+const actions = ["关闭瞭望台", "登记故障", "安排维修", "维修完成", "撤回维修完成"]
 const statuses = ["正常值守", "临时关闭", "设备故障", "维修中"]
 const stats = [{"label": "瞭望台总数", "value": 0}, {"label": "正常值守数", "value": 0}, {"label": "故障台数", "value": 0}]
 
+const session = useSessionStore()
 const rows = ref<EntryRow[]>([])
+const checks = ref<EntryRow[]>([])
 const total = ref(0)
 const errorMessage = ref('')
 const filters = ref<Record<string, string>>({})
@@ -98,6 +117,18 @@ const statusSummary = computed(() =>
     count: rows.value.filter((row) => String(row.status) === status).length,
   })),
 )
+
+// 非本林场的瞭望台只能查看，不出操作按钮；旧记录没登记所属林场时按本林场放行。
+function viewOnly(row: EntryRow): boolean {
+  return !session.canManageFarm(row['所属林场'])
+}
+
+// 该瞭望台名下还没办结的气象核查待办：核查结论的两个入口之一就放在这里。
+function pendingCheckFor(row: EntryRow): EntryRow | undefined {
+  return checks.value.find(
+    (item) => Number(item.lookoutId) === Number(row.id) && item.status === '待核查',
+  )
+}
 
 function resetFilters() {
   filters.value = {}
@@ -122,12 +153,28 @@ function runAction(action: string, row: EntryRow) {
   reload()
 }
 
+function concludePending(row: EntryRow, conclusion: string) {
+  errorMessage.value = ''
+  const check = pendingCheckFor(row)
+  if (!check) {
+    errorMessage.value = '该瞭望台没有待核查的气象核查单'
+    return
+  }
+  const result = submitWeatherCheckConclusion(Number(check.id), conclusion)
+  if (!result.ok) {
+    errorMessage.value = result.message
+    return
+  }
+  reload()
+}
+
 function reload() {
   errorMessage.value = ''
   try {
     const payload = listEntries(meta.key, filters.value)
     rows.value = payload.items
     total.value = payload.total
+    checks.value = listWeatherChecks()
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : '瞭望台管理列表读取失败'
   }
